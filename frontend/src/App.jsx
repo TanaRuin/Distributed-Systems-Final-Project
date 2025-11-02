@@ -1,19 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
+import io from "socket.io-client";
 import { Send, Flame } from 'lucide-react';
 import './ChatBox.css';
 
+const socket = io("http://localhost:5001");
+
+// temporary fake IDs until auth implemented
+const FAKE_USER_ID = "6731a9121234567890abcd10";
+const FAKE_ROOM_ID = "6731a9121234567890abcd20";
+
 export default function ChatBox() {
-  const [messages, setMessages] = useState([
-    { id: 1, user: 'Mavuika', text: 'Hey everyone!', isAI: false },
-    { id: 2, user: 'Mualani', text: 'Welcome, travelers!', isAI: true },
-    { id: 3, user: 'Kinich', text: 'Tell us about this place!', isAI: false },
-    { id: 4, user: 'Chasca', text: 'Natlan is a land of war!', isAI: true },
-    { id: 5, user: 'Skirk', text: 'Ode of Ressurection Protects All!', isAI: false },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sendToAI, setSendToAI] = useState(true);
   const [userName, setUserName] = useState('Traveler');
   const messagesEnd = useRef(null);
+
+  useEffect(() => {
+    socket.on("receiveMessage", (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
+
+    return () => socket.off("receiveMessage");
+  }, []);
 
   const scrollToBottom = () => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,34 +33,38 @@ export default function ChatBox() {
   }, [messages]);
 
   const handleSend = () => {
-    if (input.trim() === '') return;
+    if (!input.trim()) return;
 
     const newMessage = {
-      id: messages.length + 1,
-      user: userName,
-      text: input,
-      isAI: false,
+      senderId: FAKE_USER_ID,
+      senderName: userName,
+      roomId: FAKE_ROOM_ID,
+      message: input,
+      isAI: false
     };
 
-    setMessages([...messages, newMessage]);
+    socket.emit("sendMessage", newMessage);
     setInput('');
 
     if (sendToAI) {
       setTimeout(() => {
         const responses = [
-          `Those who forged our own destiny and future.`,
-          `We are the inheritors of memory and legend.`,
-          `That is Natlan's fire, the lifeblood of our nation.`,
-          `Those who grew alongside sun and wind.!`,
+          "Those who forged our own destiny and future.",
+          "We are the inheritors of memory and legend.",
+          "That is Natlan's fire, the lifeblood of our nation.",
+          "Those who grew alongside sun and wind!"
         ];
+
         const aiResponse = {
-          id: messages.length + 2,
-          user: 'Tumaini',
-          text: responses[Math.floor(Math.random() * responses.length)],
-          isAI: true,
+          senderId: "AI_SYSTEM",
+          senderName: "Tumaini",
+          roomId: FAKE_ROOM_ID,
+          message: responses[Math.floor(Math.random() * responses.length)],
+          isAI: true
         };
-        setMessages(prev => [...prev, aiResponse]);
-      }, 800);
+
+        socket.emit("sendMessage", aiResponse);
+      }, 700);
     }
   };
 
@@ -80,20 +93,20 @@ export default function ChatBox() {
       </div>
 
       <div className="chat-area">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`message ${msg.isAI ? 'ai' : 'user'}`}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`message ${msg.isAI ? 'ai' : 'user'}`}>
             <div className={`message-content ${msg.isAI ? 'ai' : 'user'}`}>
               <div className="message-header">
                 {msg.isAI ? (
                   <>
                     <Flame size={16} style={{ color: '#1f2937' }} />
-                    <span className="message-author">Yohuateclin</span>
+                    <span className="message-author">{msg.senderName}</span>
                   </>
                 ) : (
-                  <span className="message-author">{msg.user}</span>
+                  <span className="message-author">{msg.senderName}</span>
                 )}
               </div>
-              <p className="message-text">{msg.text}</p>
+              <p className="message-text">{msg.message}</p>
             </div>
           </div>
         ))}
