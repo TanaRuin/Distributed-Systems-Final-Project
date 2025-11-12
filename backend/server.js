@@ -1,17 +1,18 @@
 import express from "express";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
-import connectDB from "./config/db.js";
-import { app, server } from "./config/socket.js";
-import "./queues/messageWorker.js"; 
-
 dotenv.config();
+
+const app = express();
 app.use(express.json());
 
-connectDB();
+await mongoose.connect(process.env.MONGO_URI);
+console.log("✅ REST DB connected");
 
-app.get("/", (req, res) => {
-  res.send("API running with ESM + Docker hot reload 🚀");
+// Example route
+app.get("/api/hello", (req, res) => {
+  res.json({ message: "Hello from REST API" });
 });
 
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ REST API running on port ${PORT}`));
