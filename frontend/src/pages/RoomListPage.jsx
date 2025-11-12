@@ -1,39 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import styled from 'styled-components';
-
-// Mock data for rooms
-const mockRooms = [
-  { id: '1', name: 'General Discussion' },
-  { id: '2', name: 'Natlan Expedition Team' },
-  { id: '3', name: 'Project Phoenix' },
-  { id: '4', name: 'Off-Topic Banter' },
-];
+import { createRoom, getAllRooms, joinRoom } from '../service/room';
 
 export default function RoomListPage() {
-  const [rooms, setRooms] = useState(mockRooms);
+  const [rooms, setRooms] = useState([]);
   const [showCreatePopup, setShowCreatePopup] = useState(false);
   const [showJoinPopup, setShowJoinPopup] = useState(false);
   const [newRoomTitle, setNewRoomTitle] = useState('');
-  const [joinRoomId, setJoinRoomId] = useState('');
+  const [joinRoomCode, setJoinRoomCode] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleCreateRoom = (e) => {
+  const handleCreateRoom = async(e) => {
     e.preventDefault();
     if (newRoomTitle.trim() === '') return;
-    const newRoom = { id: (rooms.length + 1).toString(), name: newRoomTitle };
-    setRooms([...rooms, newRoom]);
+    
+    const resp = await createRoom(newRoomTitle);
+    if(resp.success){
+      toast.success(resp.message);
+      setLoading(true);
+      fetchRoomList();
+    }
+    else toast.error(resp.message);
+    
     setNewRoomTitle('');
     setShowCreatePopup(false);
   };
 
-  const handleJoinRoom = (e) => {
+  const handleJoinRoom = async(e) => {
     e.preventDefault();
-    if (joinRoomId.trim() === '') return;
-    navigate(`/chat/${joinRoomId}`);
+    if (joinRoomCode.trim() === '') return;
+
+    const resp = await joinRoom(joinRoomCode);
+    if(resp.success){
+      toast.success(resp.message);
+      navigate(`/chat/${joinRoomCode}`, {state: {roomId: resp.roomId}});
+    }
+    else toast.error(resp.message);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    toast.success("You have been logged out.");
+    navigate("/login");
+  };
+
+  const fetchRoomList = async() => {
+    const resp = await getAllRooms();
+    
+    if (resp.success) {
+      setRooms(resp.rooms);
+    } else {
+      toast.error(resp.message);
+    }
+    setLoading(false);
+  }
+
+  useEffect(()=>{
+    setLoading(true);
+    fetchRoomList();
+  },[]);
+
   return (
+    !loading &&
     <RoomListContainer>
       {/* Create Room Popup (Modal) */}
       {showCreatePopup && (
@@ -67,8 +98,8 @@ export default function RoomListPage() {
             <PopupInput
               type="text"
               placeholder="Room ID"
-              value={joinRoomId}
-              onChange={(e) => setJoinRoomId(e.target.value)}
+              value={joinRoomCode}
+              onChange={(e) => setJoinRoomCode(e.target.value)}
               autoFocus
             />
             <PopupButtons>
@@ -86,12 +117,13 @@ export default function RoomListPage() {
       {/* Main Page Content */}
       <RoomListHeader>
         <h1>Available Rooms</h1>
+        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
       </RoomListHeader>
       <RoomList>
         {rooms.map((room) => (
           <RoomItem
-            key={room.id}
-            onClick={() => navigate(`/chat/${room.id}`)}
+            key={room.code}
+            onClick={() => navigate(`/chat/${room.code}`, {state: {roomId: room._id}})}
           >
             {room.name}
           </RoomItem>
@@ -119,15 +151,34 @@ const RoomListContainer = styled.div`
 `;
 
 const RoomListHeader = styled.header`
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* space between title and button */
   padding: 1.5rem 2rem;
-  background-color: #f5f5f5; /* Greyish header */
+  background-color: #f5f5f5;
   border-bottom: 2px solid #e0e0e0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
   h1 {
     font-size: 1.75rem;
     font-weight: 700;
     color: #222;
     margin: 0;
+  }
+`;
+
+const LogoutButton = styled.button`
+  background-color: #e74c3c;
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #c0392b;
   }
 `;
 

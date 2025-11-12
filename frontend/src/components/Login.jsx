@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom'; 
 
 
 export default function Login({ onSubmit }) {
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+
   return (
-    <AuthForm onSubmit={onSubmit}>
+    <AuthForm onSubmit={(e) => {
+      e.preventDefault(); 
+      onSubmit(email, pass);
+    }}>
       <h2>Login</h2>
       <InputGroup>
         <label htmlFor="login-email">Email</label>
-        <input id="login-email" type="email" placeholder="you@example.com" required />
+        <input id="login-email" type="email" placeholder="you@example.com" required onChange={(e) => setEmail(e.target.value)}/>
       </InputGroup>
       <InputGroup>
         <label htmlFor="login-password">Password</label>
-        <input id="login-password" type="password" placeholder="••••••••" required />
+        <input id="login-password" type="password" placeholder="••••••••" required onChange={(e) => setPass(e.target.value)}/>
       </InputGroup>
       <AuthSubmitButton type="submit">
         Login

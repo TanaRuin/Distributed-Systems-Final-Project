@@ -18,10 +18,12 @@ const seedRooms = async () => {
     const rooms = [
       {
         name: "General Chat",
+        code: "CHAT123",
         participants: [users[0]._id, users[1]._id]
       },
       {
         name: "AI Support",
+        code: "AI123",
         participants: [users[1]._id, users[2]._id] 
       }
     ];

@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getMessages } from '../service/message';
+import { toast } from 'react-toastify';
+import { getUserData } from '../service/auth';
 
 
 const ChatGlobals = createGlobalStyle`
@@ -32,19 +35,16 @@ const pulse = keyframes`
 `;
 
 export default function ChatBox() {
-  
+  const { roomCode } = useParams();
+  const location = useLocation();
+  const { roomId } = location.state;
   const navigate = useNavigate();
 
-  const [messages, setMessages] = useState([
-    { id: 1, user: 'Mavuika', text: 'Hey everyone!', isAI: false },
-    { id: 2, user: 'Mualani', text: 'Welcome, travelers!', isAI: true },
-    { id: 3, user: 'Kinich', text: 'Tell us about this place!', isAI: false },
-    { id: 4, user: 'Chasca', text: 'Natlan is a land of war!', isAI: true },
-    { id: 5, user: 'Skirk', text: 'Ode of Ressurection Protects All!', isAI: false },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sendToAI, setSendToAI] = useState(true);
-  const [userName, setUserName] = useState('Traveler');
+  const [userName, setUserName] = useState('');
+  const [loading, setLoading] = useState(false);
   const messagesEnd = useRef(null);
 
   const scrollToBottom = () => {
@@ -84,8 +84,26 @@ export default function ChatBox() {
     }
   };
 
+  const fetchMessages = async() => {
+    const resp = await getMessages(roomId);
+        
+    if (resp.success) {
+      setMessages(resp.chats);
+    } else {
+      toast.error(resp.message);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    const user = getUserData();
+    setUserName(user.name);
+    fetchMessages();
+  }, []);
+
   return (
-    <ChatContainer>
+    !loading && <ChatContainer>
       <ChatGlobals /> {/* Injects global styles */}
       
       <Header>
@@ -110,7 +128,7 @@ export default function ChatBox() {
 
       <ChatArea className="chat-area"> {/* Added class for scrollbar */}
         {messages.map((msg) => (
-          <Message key={msg.id} $isAI={msg.isAI}>
+          <Message key={msg._id} $isAI={msg.isAI}>
             <MessageContent $isAI={msg.isAI}>
               <MessageHeader>
                 {msg.isAI ? (
@@ -122,7 +140,7 @@ export default function ChatBox() {
                   <MessageAuthor>{msg.user}</MessageAuthor>
                 )}
               </MessageHeader>
-              <MessageText>{msg.text}</MessageText>
+              <MessageText>{msg.message}</MessageText>
             </MessageContent>
           </Message>
         ))}

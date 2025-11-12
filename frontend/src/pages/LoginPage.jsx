@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Login from '../components/Login';
-
+import { login, setAuth } from '../service/auth.js';
+import { toast } from 'react-toastify';
 
 
 const AuthPageContainer = styled.div`
@@ -22,19 +23,20 @@ const AuthFormWrapper = styled.div`
   border: 1px solid #e0e0e0;
 `;
 
-export default function LoginPage({ onLoginSuccess }) {
-  
+export default function LoginPage() {
   const navigate = useNavigate();
-
   
-  const handleLogin = (e) => {
-    e.preventDefault(); 
-    console.log('Login attempt...');
-    onLoginSuccess(); 
-    navigate('/rooms'); 
+  const handleLogin = async (email, pass) => {
+    const resp = await login(email, pass);
+
+    if (resp.success) {
+      toast.success(resp.message);
+      setAuth(resp.user);
+      navigate('/rooms');
+    } else {
+      toast.error(resp.message);
+    }
   };
-
-  
 
   return (
     <AuthPageContainer>

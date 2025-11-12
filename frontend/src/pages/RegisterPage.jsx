@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Register from '../components/Register';
+import { register, setAuth } from '../service/auth';
+import { toast } from 'react-toastify';
 
 
 const AuthPageContainer = styled.div`
@@ -21,20 +23,19 @@ const AuthFormWrapper = styled.div`
   border: 1px solid #e0e0e0;
 `;
 
-export default function RegisterPage({ onRegisterSuccess }) {
+export default function RegisterPage() {
   const navigate = useNavigate();
 
-  
-  const handleRegister = (e) => {
-    e.preventDefault(); 
-    console.log('Register attempt...');
+  const handleRegister = async(name, email, pass) => {    
+    const resp = await register(name, email, pass);
     
-    
-    
-    
-    onRegisterSuccess(); 
-    
-    navigate('/rooms'); 
+    if (resp.success) {
+      toast.success(resp.message);
+      setAuth(resp.user);
+      navigate('/rooms');
+    } else {
+      toast.error(resp.message);
+    }
   };
 
   return (
