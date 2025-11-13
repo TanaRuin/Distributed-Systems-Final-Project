@@ -66,3 +66,23 @@ export const login = async (req, res) => {
     return res.status(500).json({success:false, message:"Please try again"});
   }
 };
+
+export const getUser = async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const existing = await userModel.findById(userId);
+    
+    const returned = {
+      name: existing.name,
+      email: existing.email,
+      role: existing.role,
+      _id: existing._id,
+    };
+
+    return res.status(200).json({ success: true, user: returned });
+
+  } catch (error) {
+    console.error("getUser failed", error);
+    return res.status(500).json({success:false, message:"Please try again"});
+  }
+}

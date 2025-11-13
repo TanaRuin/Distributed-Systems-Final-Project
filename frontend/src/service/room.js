@@ -53,7 +53,7 @@ export const joinRoom = async(roomCode) => {
         return {
             success: resp.data.success,
             message: resp.data.message || "Join room success",
-            roomId: resp.data.roomId
+            room: resp.data.room
         };
     } catch (error) {
         console.error("Join room error:", error);

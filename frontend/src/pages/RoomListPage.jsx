@@ -36,7 +36,7 @@ export default function RoomListPage() {
     const resp = await joinRoom(joinRoomCode);
     if(resp.success){
       toast.success(resp.message);
-      navigate(`/chat/${joinRoomCode}`, {state: {roomId: resp.roomId}});
+      navigate(`/chat/${joinRoomCode}`, {state: {room: resp.room}});
     }
     else toast.error(resp.message);
   };
@@ -123,7 +123,7 @@ export default function RoomListPage() {
         {rooms.map((room) => (
           <RoomItem
             key={room.code}
-            onClick={() => navigate(`/chat/${room.code}`, {state: {roomId: room._id}})}
+            onClick={() => navigate(`/chat/${room.code}`, {state: {room: room}})}
           >
             {room.name}
           </RoomItem>

@@ -2,11 +2,22 @@ import axios from "axios"
 import { getHttp } from "./http"
 
 export const sendMessage = async(roomId, userId, content) => {
+    try {
+        const resp = await axios.post(
+            getHttp() + "/api/chat/send",
+            {roomId: roomId, userId: userId, content: content},
+        );
 
-    return await axios.post(
-        getHttp() + "/api/chat/send",
-        {roomId: roomId, userId: userId, content: content},
-    );
+        return {
+            success: resp.data.success,
+            message: resp.data.message || "send message success",
+        };
+    } catch (error) {
+        console.error("send message error:", error);
+        const message = error.response?.data?.message || "send message failed. Please try again.";
+
+        return {success: false, message};
+    }
 }
 
 export const getMessages = async(roomId) => {

@@ -48,6 +48,25 @@ export const register = async(name, email, pass) => {
     }
 }
 
+export const getUserById = async(userId) => {
+    try {
+        const resp = await axios.get(
+            getHttp() + "/api/auth/user?userId=" + userId,
+        );
+
+        return {
+            success: resp.data.success,
+            user: resp.data.user,
+            message: resp.data.message || "Get user by id success",
+        };
+    } catch (error) {
+        console.error("Get user by id error:", error);
+        const message = error.response?.data?.message || "Get user by id failed. Please try again.";
+
+        return {success: false, message};
+    }
+}
+
 export const setAuth = (user) => {
     localStorage.setItem("user", JSON.stringify(user));
 }

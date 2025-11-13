@@ -22,26 +22,28 @@ export const createRoom = async(req, res) => {
     }
 }
 
-export const joinRoom = async(req, res) => {
+export const joinRoom = async (req, res) => {
     try {
-        const {roomCode, userId} = req.body;
+        const { roomCode, userId } = req.body;
 
-        const existing = await roomModel.findOne({ code: roomCode });
-        if(!existing){ 
-            return res.status(400).json({success:false, message:'Invalid room code'})
+        const updatedRoom = await roomModel.findOneAndUpdate(
+            { code: roomCode },
+            { $addToSet: { participants: userId } }, 
+            { new: true }
+        );
+
+        if (!updatedRoom) {
+        return res.status(400).json({ success: false, message: 'Invalid room code' });
         }
 
-        const filter = { code: roomCode };
-        const update = { $push: { participants: userId } };
-        await roomModel.findOneAndUpdate(filter, update);
-
-        return res.status(200).json({ success: true, roomId: existing._id });
+        return res.status(200).json({ success: true, room: updatedRoom });
 
     } catch (error) {
         console.error("joinRoom failed", error);
-        return res.status(500).json({success:false, message:"Please try again"});
+        return res.status(500).json({ success: false, message: "Please try again" });
     }
-}
+};
+
 
 export const getRooms = async(req, res) => {
     try {

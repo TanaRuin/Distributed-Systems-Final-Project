@@ -3,9 +3,9 @@ import { useState, useRef, useEffect, use } from 'react';
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getMessages } from '../service/message';
+import { getMessages, sendMessage } from '../service/message';
 import { toast } from 'react-toastify';
-import { getUserData } from '../service/auth';
+import { getUserById, getUserData } from '../service/auth';
 
 
 const ChatGlobals = createGlobalStyle`
@@ -35,16 +35,16 @@ const pulse = keyframes`
 `;
 
 export default function ChatBox() {
-  const { roomCode } = useParams();
   const location = useLocation();
-  const { roomId } = location.state;
+  const { room } = location.state;
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sendToAI, setSendToAI] = useState(true);
-  const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userMap, setUserMap] = useState({});
+
   const messagesEnd = useRef(null);
 
   const scrollToBottom = () => {
@@ -55,52 +55,64 @@ export default function ChatBox() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async() => {
     if (input.trim() === '') return;
-    const newMessage = {
-      id: messages.length + 1,
-      user: userName,
-      text: input,
-      isAI: false,
-    };
-    setMessages([...messages, newMessage]);
-    setInput('');
+
     if (sendToAI) {
-      setTimeout(() => {
-        const responses = [
-          `Those who forged our own destiny and future.`,
-          `We are the inheritors of memory and legend.`,
-          `That is Natlan's fire, the lifeblood of our nation.`,
-          `Those who grew alongside sun and wind.!`,
-        ];
-        const aiResponse = {
-          id: messages.length + 2,
-          user: 'Tumaini',
-          text: responses[Math.floor(Math.random() * responses.length)],
-          isAI: true,
-        };
-        setMessages(prev => [...prev, aiResponse]);
-      }, 800);
+      alert("hehe");
     }
+
+    const user = getUserData();
+    const resp = await sendMessage(room._id, user._id, input);
+    if (resp.success) {
+      setLoading(true);
+      fetchMessages();
+      setLoading(false);
+    } else {
+      toast.error(resp.message);
+    }
+
+    setInput('');
   };
 
   const fetchMessages = async() => {
-    const resp = await getMessages(roomId);
+    const resp = await getMessages(room._id);
         
     if (resp.success) {
       setMessages(resp.chats);
     } else {
       toast.error(resp.message);
     }
-    setLoading(false);
   }
 
+  const fetchSenders = async () => {
+    const senders = room.participants;
+    console.log(room);
+    const responses = await Promise.all(senders.map(id => getUserById(id)));
+
+    const map = {};
+    responses.forEach((resp, i) => {
+      if (resp.success) {
+        map[senders[i]] = resp.user;
+      } else {
+        toast.error(resp.message);
+      }
+    });
+
+    setUserMap(map);
+  };
+
+
   useEffect(() => {
-    setLoading(true);
-    const user = getUserData();
-    setUserName(user.name);
-    fetchMessages();
+    const init = async () => {
+      setLoading(true);
+      await fetchSenders();
+      await fetchMessages();
+      setLoading(false);
+    };
+    init();
   }, []);
+
 
   return (
     !loading && <ChatContainer>
@@ -117,12 +129,11 @@ export default function ChatBox() {
             <HeaderTitle>
               <h1>
                 <Flame size={24} style={{ color: '#FF6B35' }} />
-                Natlan Expedition
+                {room.name}
               </h1>
-              <HeaderSubtitle>Land of Fire & Spirit</HeaderSubtitle>
             </HeaderTitle>
           </HeaderLeft>
-          <HeaderRoom>Base Camp</HeaderRoom>
+          <HeaderRoom>Code: {room.code}</HeaderRoom>
         </HeaderContent>
       </Header>
 
@@ -137,7 +148,7 @@ export default function ChatBox() {
                     <MessageAuthor>Yohuateclin</MessageAuthor>
                   </>
                 ) : (
-                  <MessageAuthor>{msg.user}</MessageAuthor>
+                  <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
                 )}
               </MessageHeader>
               <MessageText>{msg.message}</MessageText>
@@ -149,12 +160,6 @@ export default function ChatBox() {
 
       <InputArea>
         <InputControls>
-          <NameInput
-            type="text"
-            placeholder="Enter your name"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-          />
           <CheckboxLabel>
             <input
               type="checkbox"
@@ -256,14 +261,8 @@ const HeaderTitle = styled.div`
   }
 `;
 
-const HeaderSubtitle = styled.p`
-  font-size: 12px;
-  color: #777;
-  margin: 0;
-`;
-
 const HeaderRoom = styled.div`
-  font-size: 12px;
+  font-size: 18px;
   color: #888;
 `;
 
@@ -333,22 +332,6 @@ const InputControls = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 12px;
-`;
-
-const NameInput = styled.input`
-  flex: 1;
-  padding: 8px 12px;
-  background-color: #ffffff;
-  color: #333;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-  }
 `;
 
 const CheckboxLabel = styled.label`
