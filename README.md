@@ -1,11 +1,11 @@
 Sebelum mulai:
 ini .env file (taruh di root backend):
 
-MONGO_URI=mongodb://localhost:27017/distributed_system_db
-REDIS_HOST=localhost
-REDIS_PORT=6379
-PORT=5000
-FRONTEND_URL=http://localhost:5173
+- MONGO_URI=mongodb://localhost:27017/distributed_system_db
+- REDIS_HOST=localhost
+- REDIS_PORT=6379
+- PORT=5000
+- FRONTEND_URL=http://localhost:5173
 
 ### Cara run backend:
 - cd backend
