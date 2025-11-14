@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, use } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { getMessages, sendMessage } from '../service/message';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getMessages } from '../service/message';
 import { toast } from 'react-toastify';
 import { getUserById, getUserData } from '../service/auth';
+import io from "socket.io-client";
 
 
 const ChatGlobals = createGlobalStyle`
@@ -34,9 +35,12 @@ const pulse = keyframes`
   }
 `;
 
+const socket = io("http://localhost:5001");
+
 export default function ChatBox() {
   const location = useLocation();
-  const { room } = location.state;
+  const { room: initialRoom } = location.state;
+  const [room, setRoom] = useState(initialRoom);
   const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
@@ -55,6 +59,34 @@ export default function ChatBox() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    const fetchUserById = async(msg) => {
+      const resp = await getUserById(msg.senderId);
+      if (resp.success) {
+        setUserMap(prev => ({ ...prev, [msg.senderId]: resp.user }));
+        setRoom(prev => ({
+          ...prev,
+          participants: prev.participants.includes(msg.senderId)
+            ? prev.participants
+            : [...prev.participants, msg.senderId]
+        }));
+      }
+    }
+
+    socket.emit("joinRoom", room._id);
+
+    socket.on("receiveMessage", (msg) => {
+      if (!userMap[msg.senderId]){
+        fetchUserById(msg);
+      }
+      fetchMessages();
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+    }
+  }, []);
+
   const handleSend = async() => {
     if (input.trim() === '') return;
 
@@ -63,19 +95,18 @@ export default function ChatBox() {
     }
 
     const user = getUserData();
-    const resp = await sendMessage(room._id, user._id, input);
-    if (resp.success) {
-      setLoading(true);
-      fetchMessages();
-      setLoading(false);
-    } else {
-      toast.error(resp.message);
+    const newMessage = {
+      senderId: user._id, 
+      roomId: room._id, 
+      message: input
     }
-
+    socket.emit("sendMessage", newMessage);
     setInput('');
+
   };
 
   const fetchMessages = async() => {
+    console.log("fetching message")
     const resp = await getMessages(room._id);
         
     if (resp.success) {
