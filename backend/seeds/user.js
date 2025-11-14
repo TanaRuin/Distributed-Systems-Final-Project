@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import chatModel from "../models/user.js"; 
 import dotenv from "dotenv";
 import connectDB from "../config/db.js";
+import bcrypt from "bcrypt";
 
 dotenv.config();
 
@@ -13,23 +14,25 @@ const seedUsers = async () => {
     // await chatModel.deleteMany({});
     // console.log("🧹 Cleared old records");
 
+    const pass = await bcrypt.hash("password123", 10);
+
     const users = [
       {
         name: "Alice",
         email: "alice@example.com",
-        password: "hashedpassword1",
+        password: pass,
         role: "human"
       },
       {
         name: "Bob",
         email: "bob@example.com",
-        password: "hashedpassword2",
+        password: pass,
         role: "human"
       },
       {
         name: "ChatGPT",
         email: "ai@openai.com",
-        password: "nopasswordneeded",
+        password: pass,
         role: "AI"
       }
     ];

@@ -35,7 +35,8 @@ const pulse = keyframes`
   }
 `;
 
-const socket = io("http://localhost:5001");
+const socketUrl = import.meta.env.VITE_SOCKET_URL;
+const socket = io(socketUrl);
 
 export default function ChatBox() {
   const location = useLocation();
@@ -73,13 +74,19 @@ export default function ChatBox() {
       }
     }
 
+    const fetchNewMsg = async() => {
+      setLoading(true);
+      await fetchMessages();
+      setLoading(false);
+    }
+
     socket.emit("joinRoom", room._id);
 
     socket.on("receiveMessage", (msg) => {
       if (!userMap[msg.senderId]){
         fetchUserById(msg);
       }
-      fetchMessages();
+      fetchNewMsg();
     });
 
     return () => {
