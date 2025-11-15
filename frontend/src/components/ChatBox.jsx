@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getMessages } from '../service/message';
+import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
 import { getUserById, getUserData } from '../service/auth';
 import io from "socket.io-client";
@@ -98,7 +98,13 @@ export default function ChatBox() {
     if (input.trim() === '') return;
 
     if (sendToAI) {
-      alert("hehe");
+      const resp = await generateAiResponse(input)
+      if (resp.success) {
+        alert(resp.response);
+      } 
+      else {
+        toast.error(resp.message);
+      }
     }
 
     const user = getUserData();

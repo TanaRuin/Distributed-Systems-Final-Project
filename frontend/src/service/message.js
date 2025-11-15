@@ -38,3 +38,22 @@ export const getMessages = async(roomId) => {
         return {success: false, message};
     }
 }
+
+export const generateAiResponse = async (prompt) => {
+    try{
+        const resp = await axios.post(
+            getHttp() + "/api/chat/generateAi", {prompt}
+        );
+        console.log('hellp')
+
+        return {
+            success: resp.data.success,
+            response: resp.data.response,
+            message: resp.data.message || "Generated messages success",
+        };
+    }
+    catch(err){
+        console.error("Generate bot response error: ", err)
+        return {success: false, err}
+    }
+}
