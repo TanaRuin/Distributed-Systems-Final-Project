@@ -1,11 +1,11 @@
 import axios from "axios"
 import { getHttp } from "./http"
 
-export const sendMessage = async(roomId, userId, content) => {
+export const sendMessage = async(roomId, userId, content, isAiContext) => {
     try {
         const resp = await axios.post(
             getHttp() + "/api/chat/send",
-            {roomId: roomId, userId: userId, content: content},
+            {roomId: roomId, userId: userId, content: content, isAiContext: isAiContext},
         );
 
         return {

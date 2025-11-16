@@ -116,7 +116,8 @@ export default function ChatBox() {
     const newMessage = {
       senderId: user._id, 
       roomId: room._id, 
-      message: input
+      message: input,
+      isAiContext: sendToAI
     }
     socket.emit("sendMessage", newMessage);
     setInput('');
@@ -130,7 +131,8 @@ export default function ChatBox() {
         const newMessage = {
           senderId: ai_user._id, 
           roomId: room._id, 
-          message: resp.response 
+          message: resp.response,
+          isAiContext: sendToAI 
         }
         socket.emit("sendMessage", newMessage);
       } 
@@ -179,7 +181,7 @@ export default function ChatBox() {
     };
     init();
   }, []);
-  
+
 
   return (
     !loading && <ChatContainer>

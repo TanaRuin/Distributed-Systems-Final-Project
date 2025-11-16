@@ -16,11 +16,12 @@ export const getMessages = async(req, res) => {
 
 export const sendMessage = async(req, res) => {
     try {
-        const {roomId, userId, content} = req.body;
+        const {roomId, userId, content, isAiContext} = req.body;
         await chatModel.create({
             roomId,
             senderId: userId,
             message: content,
+            isAiContext
         })
         return res.status(200).json({success:true})
 
