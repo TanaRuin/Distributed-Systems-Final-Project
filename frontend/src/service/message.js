@@ -53,6 +53,6 @@ export const generateAiResponse = async (prompt, type, roomId) => {
     }
     catch(err){
         console.error("Generate bot response error: ", err)
-        return {success: false, err}
+        return {success: false, message: err}
     }
 }
