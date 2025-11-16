@@ -18,12 +18,13 @@ const redis = new Redis({
 export const messageWorker = new Worker(
   "messages",
   async (job) => {
-    const { senderId, roomId, message } = job.data;
+    const { senderId, roomId, message, isAiContext } = job.data;
 
     await chatModel.create({
       roomId,
       senderId,
       message,
+      isAiContext
     });
 
     console.log("💾 Stored message:", message);

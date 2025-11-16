@@ -30,8 +30,26 @@ const seedUsers = async () => {
         role: "human"
       },
       {
-        name: "ChatGPT",
-        email: "ai@openai.com",
+        name: "Gemini",
+        email: "ai@gemini.com",
+        password: pass,
+        role: "AI"
+      },
+      {
+        name: "Qwen",
+        email: "qwen@openrouter.com",
+        password: pass,
+        role: "AI"
+      },
+      {
+        name: "Deepseek",
+        email: "deepseek@openrouter.com",
+        password: pass,
+        role: "AI"
+      },
+      {
+        name: "All",
+        email: "allai@ai.com",
         password: pass,
         role: "AI"
       }

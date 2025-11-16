@@ -3,9 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getMessages } from '../service/message';
+import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
-import { getUserById, getUserData } from '../service/auth';
+import { getAllUserAi, getUserById, getUserData } from '../service/auth';
 import io from "socket.io-client";
 
 
@@ -49,6 +49,9 @@ export default function ChatBox() {
   const [sendToAI, setSendToAI] = useState(true);
   const [loading, setLoading] = useState(false);
   const [userMap, setUserMap] = useState({});
+  const [aiUsers, setAiUsers] = useState([])
+  const [aiType, setAiType] = useState('Gemini');
+  const [aiIdSet, setAiIdSet] = useState(new Set());
 
   const messagesEnd = useRef(null);
 
@@ -94,21 +97,49 @@ export default function ChatBox() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchAiUsers = async () => {
+      const resp = await getAllUserAi();
+      if (resp.success && resp.users) {
+        setAiUsers(resp.users);
+        setAiIdSet(new Set(resp.users.map(u => u._id)));
+      }
+    };
+    fetchAiUsers();
+  }, []);
+
+
   const handleSend = async() => {
     if (input.trim() === '') return;
-
-    if (sendToAI) {
-      alert("hehe");
-    }
 
     const user = getUserData();
     const newMessage = {
       senderId: user._id, 
       roomId: room._id, 
-      message: input
+      message: input,
+      isAiContext: sendToAI
     }
     socket.emit("sendMessage", newMessage);
     setInput('');
+
+
+    if (sendToAI) {
+      const resp = await generateAiResponse(input, aiType, room._id);
+      const ai_user = aiUsers.find(u => u.name === aiType);
+
+      if (resp.success) {
+        const newMessage = {
+          senderId: ai_user._id, 
+          roomId: room._id, 
+          message: resp.response,
+          isAiContext: sendToAI 
+        }
+        socket.emit("sendMessage", newMessage);
+      } 
+      else {
+        toast.error(resp.message);
+      }
+    }
 
   };
 
@@ -177,13 +208,13 @@ export default function ChatBox() {
 
       <ChatArea className="chat-area"> {/* Added class for scrollbar */}
         {messages.map((msg) => (
-          <Message key={msg._id} $isAI={msg.isAI}>
-            <MessageContent $isAI={msg.isAI}>
+          <Message key={msg._id} $isAI={aiIdSet.has(msg.senderId)}>
+            <MessageContent $isAI={aiIdSet.has(msg.senderId)}>
               <MessageHeader>
-                {msg.isAI ? (
+                {aiIdSet.has(msg.senderId) ? (
                   <>
                     <Flame size={16} />
-                    <MessageAuthor>Yohuateclin</MessageAuthor>
+                    <MessageAuthor  $isAI={aiIdSet.has(msg.senderId)}>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
                   </>
                 ) : (
                   <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
@@ -206,6 +237,18 @@ export default function ChatBox() {
             />
             Ask Guide
           </CheckboxLabel>
+
+          <SelectAI
+            value={aiType}
+            onChange={(e) => setAiType(e.target.value)}
+          >
+            {aiUsers.map((u) => (
+              <option key={u._id} value={u.name}>
+                {u.name}
+              </option>
+            ))}
+          </SelectAI>
+
         </InputControls>
 
         <MessageInputGroup>
@@ -429,5 +472,21 @@ const SendButton = styled.button`
   }
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+const SelectAI = styled.select`
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #ffffff;
+  color: #333;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   }
 `;
