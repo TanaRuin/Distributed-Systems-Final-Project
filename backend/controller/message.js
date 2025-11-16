@@ -32,7 +32,7 @@ export const sendMessage = async(req, res) => {
 }
 
 export const generateBotRes = async(req,res) =>{
-    const {prompt, type} = req.body;
+    const {prompt, type, roomId} = req.body;
     const aiTypes = ['Gemini','Qwen','Deepseek','All']
 
     if (!aiTypes.includes(type)){
@@ -40,12 +40,29 @@ export const generateBotRes = async(req,res) =>{
         return res.status(404).json({success: false, error: 'Invalid AI Type' });
     }
 
+    const history = await chatModel
+            .find({ roomId, isAiContext: true })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .lean();
+
+    const contextLines = history
+        .reverse()
+        .map(h => h.message)
+        .join("\n");
+
+    const finalPrompt =
+        `Use this as context for your prompt if needed\n` +
+        `${contextLines}\n` +
+        `${prompt}`;
+    
+
     if (type === 'All'){
         return res.status(200).json({success: true, response: "Still on development", message: "Still on development"})
     }
 
     try {
-        const msgResponse = await generateAiResponse(prompt, type);
+        const msgResponse = await generateAiResponse(finalPrompt, type);
         
         if (msgResponse === ""){
             console.error('AI API Error:', err.response?.data || err.message);

@@ -124,7 +124,7 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
-      const resp = await generateAiResponse(input, aiType);
+      const resp = await generateAiResponse(input, aiType, room._id);
       const ai_user = aiUsers.find(u => u.name === aiType);
 
       if (resp.success) {
