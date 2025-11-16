@@ -17,24 +17,24 @@ const seedUsers = async () => {
     const pass = await bcrypt.hash("password123", 10);
 
     const users = [
-      // {
-      //   name: "Alice",
-      //   email: "alice@example.com",
-      //   password: pass,
-      //   role: "human"
-      // },
-      // {
-      //   name: "Bob",
-      //   email: "bob@example.com",
-      //   password: pass,
-      //   role: "human"
-      // },
-      // {
-      //   name: "ChatGPT",
-      //   email: "ai@openai.com",
-      //   password: pass,
-      //   role: "AI"
-      // },
+      {
+        name: "Alice",
+        email: "alice@example.com",
+        password: pass,
+        role: "human"
+      },
+      {
+        name: "Bob",
+        email: "bob@example.com",
+        password: pass,
+        role: "human"
+      },
+      {
+        name: "Gemini",
+        email: "ai@gemini.com",
+        password: pass,
+        role: "AI"
+      },
       {
         name: "Qwen",
         email: "qwen@openrouter.com",
@@ -48,7 +48,7 @@ const seedUsers = async () => {
         role: "AI"
       },
       {
-        name: "All AI",
+        name: "All",
         email: "allai@ai.com",
         password: pass,
         role: "AI"
