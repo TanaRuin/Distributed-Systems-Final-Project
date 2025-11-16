@@ -7,13 +7,20 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
+      - mongo-data:/data/db 
 
   redis:
     image: redis:latest
     container_name: redis
     ports:
       - "6379:6379"
+  
+  loadbalancer:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
 
 volumes:
   mongo-data:

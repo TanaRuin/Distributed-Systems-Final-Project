@@ -1,24 +1,41 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import dotenv from "dotenv";
 import cors from "cors";
+import dotenv from "dotenv";
 import { messageQueue } from "./queues/messageQueue.js"; 
 import { messageWorker } from "./queues/messageWorker.js";
 
+import connectDB from "./config/db.js";
+import authRouter from "./router/auth.js";
+import roomRouter from "./router/room.js";
+import chatRouter from "./router/message.js";
+
 dotenv.config();
 
-// Express app (used only for health check or future upgrades, no REST routes)
 const app = express();
-app.use(cors());
+app.use(express.json());
+app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 
+connectDB();
+
+app.use("/api/auth", authRouter);
+app.use("/api/room", roomRouter);
+app.use("/api/chat", chatRouter);
+
+app.get("/", (req, res) => {
+  res.send(`Combined REST + Socket Server running 🚀 on port ${5001}`);
+});
+
+// Create ONE server that handles both
 const server = http.createServer(app);
 
+// SOCKET.IO SAME SERVER
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST"],
+  },
 });
 
 io.on("connection", (socket) => {
@@ -46,11 +63,8 @@ io.on("connection", (socket) => {
     });
 });
 
-// Health check
-app.get("/", (req, res) => res.send("Socket server running ✅"));
-
-// Start server
-const PORT = process.env.SOCKET_PORT || 5001;
+// Run on port 5000 OR 5001 or any
+const PORT = 5001;
 server.listen(PORT, () => {
-  console.log(`⚡ Socket.io server running on port ${PORT}`);
+  console.log(`Server (REST + Socket) running on port ${PORT}`);
 });
