@@ -39,10 +39,10 @@ export const getMessages = async(roomId) => {
     }
 }
 
-export const generateAiResponse = async (prompt) => {
+export const generateAiResponse = async (prompt, type) => {
     try{
         const resp = await axios.post(
-            getHttp() + "/api/chat/generateAi", {prompt}
+            getHttp() + "/api/chat/generateAi", {prompt, type}
         );
 
         return {

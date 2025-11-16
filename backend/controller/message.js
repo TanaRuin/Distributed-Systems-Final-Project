@@ -31,18 +31,34 @@ export const sendMessage = async(req, res) => {
 }
 
 export const generateBotRes = async(req,res) =>{
-    const {prompt} = req.body;
+    const {prompt, type} = req.body;
+    const aiTypes = ['Gemini','Qwen','Deepseek','All']
+
+    if (!aiTypes.includes(type)){
+        console.error('Error:', "Invalid AI Type");
+        return res.status(404).json({success: false, error: 'Invalid AI Type' });
+    }
+
+    if (type === 'All'){
+        return res.status(200).json({success: true, response: "Still on development", message: "Still on development"})
+    }
 
     try {
-        const msgResponse = await generateAiResponse(prompt);
-        res.status(200).json({
+        const msgResponse = await generateAiResponse(prompt, type);
+        
+        if (msgResponse === ""){
+            console.error('AI API Error:', err.response?.data || err.message);
+            return res.status(500).json({success: false, error: 'Failed to generate content' });
+        }
+
+        return res.status(200).json({
             success: true,
             response: msgResponse,
             message: "Chat generated successfully."
         });
       } 
       catch (err) {
-        console.error('Gemini API Error:', err.response?.data || err.message);
-        res.status(500).json({ error: 'Failed to generate content' });
+        console.error('AI API Error:', err.response?.data || err.message);
+        return res.status(500).json({success: false, error: 'Failed to generate content' });
       }
 }

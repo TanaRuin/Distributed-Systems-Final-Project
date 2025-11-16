@@ -123,7 +123,7 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
-      const resp = await generateAiResponse(input);
+      const resp = await generateAiResponse(input, aiType);
       const ai_user = aiUsers.find(u => u.name === aiType);
 
       if (resp.success) {
@@ -179,7 +179,7 @@ export default function ChatBox() {
     };
     init();
   }, []);
-
+  
 
   return (
     !loading && <ChatContainer>
@@ -212,7 +212,7 @@ export default function ChatBox() {
                 {aiIdSet.has(msg.senderId) ? (
                   <>
                     <Flame size={16} />
-                    <MessageAuthor>{aiType}</MessageAuthor>
+                    <MessageAuthor  $isAI={aiIdSet.has(msg.senderId)}>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
                   </>
                 ) : (
                   <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
@@ -235,6 +235,18 @@ export default function ChatBox() {
             />
             Ask Guide
           </CheckboxLabel>
+
+          <SelectAI
+            value={aiType}
+            onChange={(e) => setAiType(e.target.value)}
+          >
+            {aiUsers.map((u) => (
+              <option key={u._id} value={u.name}>
+                {u.name}
+              </option>
+            ))}
+          </SelectAI>
+
         </InputControls>
 
         <MessageInputGroup>
@@ -458,5 +470,21 @@ const SendButton = styled.button`
   }
   &:active {
     transform: scale(0.98);
+  }
+`;
+
+const SelectAI = styled.select`
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #ffffff;
+  color: #333;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   }
 `;
