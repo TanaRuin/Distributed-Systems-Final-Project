@@ -82,3 +82,21 @@ export const isAuth = () => {
     if (!user) return false;
     return true;
 }
+
+export const getAllUserAi = async () => {
+    try {
+        const resp = await axios.get(
+            getHttp() + "/api/auth/aiuser"
+        );
+
+        return {
+            success: resp.data.success,
+            users: resp.data.users,
+            message: resp.data.message || "Get all ai users success",
+        };
+    } catch (error) {
+        console.error("Get ai users error:", error);
+        const message = error.response?.data?.message || "Get ai users failed. Please try again.";
+        return {success: false, message};
+    }
+}

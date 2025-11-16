@@ -44,7 +44,6 @@ export const generateAiResponse = async (prompt) => {
         const resp = await axios.post(
             getHttp() + "/api/chat/generateAi", {prompt}
         );
-        console.log('hellp')
 
         return {
             success: resp.data.success,

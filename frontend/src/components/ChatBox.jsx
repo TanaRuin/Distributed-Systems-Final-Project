@@ -5,7 +5,7 @@ import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
-import { getUserById, getUserData } from '../service/auth';
+import { getAllUserAi, getUserById, getUserData } from '../service/auth';
 import io from "socket.io-client";
 
 
@@ -49,6 +49,9 @@ export default function ChatBox() {
   const [sendToAI, setSendToAI] = useState(true);
   const [loading, setLoading] = useState(false);
   const [userMap, setUserMap] = useState({});
+  const [aiUsers, setAiUsers] = useState([])
+  const [aiType, setAiType] = useState('Gemini');
+  const [aiIdSet, setAiIdSet] = useState(new Set());
 
   const messagesEnd = useRef(null);
 
@@ -94,18 +97,20 @@ export default function ChatBox() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchAiUsers = async () => {
+      const resp = await getAllUserAi();
+      if (resp.success && resp.users) {
+        setAiUsers(resp.users);
+        setAiIdSet(new Set(resp.users.map(u => u._id)));
+      }
+    };
+    fetchAiUsers();
+  }, []);
+
+
   const handleSend = async() => {
     if (input.trim() === '') return;
-
-    if (sendToAI) {
-      const resp = await generateAiResponse(input)
-      if (resp.success) {
-        alert(resp.response);
-      } 
-      else {
-        toast.error(resp.message);
-      }
-    }
 
     const user = getUserData();
     const newMessage = {
@@ -115,6 +120,24 @@ export default function ChatBox() {
     }
     socket.emit("sendMessage", newMessage);
     setInput('');
+
+
+    if (sendToAI) {
+      const resp = await generateAiResponse(input);
+      const ai_user = aiUsers.find(u => u.name === aiType);
+
+      if (resp.success) {
+        const newMessage = {
+          senderId: ai_user._id, 
+          roomId: room._id, 
+          message: resp.response 
+        }
+        socket.emit("sendMessage", newMessage);
+      } 
+      else {
+        toast.error(resp.message);
+      }
+    }
 
   };
 
@@ -183,13 +206,13 @@ export default function ChatBox() {
 
       <ChatArea className="chat-area"> {/* Added class for scrollbar */}
         {messages.map((msg) => (
-          <Message key={msg._id} $isAI={msg.isAI}>
-            <MessageContent $isAI={msg.isAI}>
+          <Message key={msg._id} $isAI={aiIdSet.has(msg.senderId)}>
+            <MessageContent $isAI={aiIdSet.has(msg.senderId)}>
               <MessageHeader>
-                {msg.isAI ? (
+                {aiIdSet.has(msg.senderId) ? (
                   <>
                     <Flame size={16} />
-                    <MessageAuthor>Yohuateclin</MessageAuthor>
+                    <MessageAuthor>{aiType}</MessageAuthor>
                   </>
                 ) : (
                   <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>

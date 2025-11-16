@@ -86,3 +86,14 @@ export const getUser = async (req, res) => {
     return res.status(500).json({success:false, message:"Please try again"});
   }
 }
+
+export const getAllAiUser = async(req, res) => {
+  try {
+    const allData = await userModel.find({role: "AI"});
+    return res.status(200).json({ success: true, users: allData });
+
+  } catch (error) {
+    console.error("getAllaiuser failed", error);
+    return res.status(500).json({success:false, message:"Please try again"});
+  }
+}
