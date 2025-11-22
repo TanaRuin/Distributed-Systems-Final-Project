@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 
-import { Send, Flame, ChevronLeft } from 'lucide-react';
+import { Send, Flame, ChevronLeft, Loader } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
-import { getUserById, getUserData } from '../service/auth';
 import { socket } from '../service/socket.js';
 import { getAllUserAi, getUserById, getUserData } from '../service/auth';
-import io from "socket.io-client";
 
 
 const ChatGlobals = createGlobalStyle`
@@ -51,6 +49,7 @@ export default function ChatBox() {
   const [aiUsers, setAiUsers] = useState([])
   const [aiType, setAiType] = useState('Gemini');
   const [aiIdSet, setAiIdSet] = useState(new Set());
+  const [aiLoading, setAiLoading] = useState(false);
 
   const messagesEnd = useRef(null);
 
@@ -123,6 +122,7 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
+      setAiLoading(true);
       const resp = await generateAiResponse(input, aiType, room._id);
       const ai_user = aiUsers.find(u => u.name === aiType);
 
@@ -134,6 +134,7 @@ export default function ChatBox() {
           isAiContext: sendToAI 
         }
         socket.emit("sendMessage", newMessage);
+        setAiLoading(false);
       } 
       else {
         toast.error(resp.message);
@@ -225,6 +226,16 @@ export default function ChatBox() {
         ))}
         <div ref={messagesEnd} />
       </ChatArea>
+
+      {aiLoading && (
+        <AiThinking>
+          <span className="dot"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
+          The guide is thinking...
+        </AiThinking>
+      )}
+
 
       <InputArea>
         <InputControls>
@@ -487,5 +498,39 @@ const SelectAI = styled.select`
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+`;
+
+const AiThinking = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f5f5f5;
+  font-weight: 500;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+
+  .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    } 
+    40% {
+      transform: scale(1);
+    }
   }
 `;

@@ -1,4 +1,5 @@
 import roomModel from "../models/room.js";
+import userModel from "../models/user.js";
 
 function generateRandomString(length) {
   return Math.random().toString(36).substring(2, 2 + length);
@@ -9,10 +10,16 @@ export const createRoom = async(req, res) => {
         const {name, userId} = req.body;
         const roomCode = generateRandomString(6);
 
+        const allData = await userModel.find({role: "AI"});
+        let participantList = [userId];
+        for (let i=0; i<allData.length; i++){
+            participantList.push(allData[i]._id);
+        }
+
         const room = await roomModel.create({
             name, 
             code: roomCode,
-            participants: [userId],
+            participants: participantList,
         });
         return res.status(200).json({ success: true, room });
 
