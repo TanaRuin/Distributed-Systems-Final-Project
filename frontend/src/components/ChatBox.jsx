@@ -5,6 +5,8 @@ import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
+import { getUserById, getUserData } from '../service/auth';
+import { socket } from '../service/socket.js';
 import { getAllUserAi, getUserById, getUserData } from '../service/auth';
 import io from "socket.io-client";
 
@@ -34,9 +36,6 @@ const pulse = keyframes`
     opacity: 1;
   }
 `;
-
-const socketUrl = import.meta.env.VITE_SOCKET_URL;
-const socket = io(socketUrl);
 
 export default function ChatBox() {
   const location = useLocation();
