@@ -18,8 +18,9 @@ const redis = new Redis({
 export const messageWorker = new Worker(
   "messages",
   async (job) => {
-    const { senderId, roomId, message, isAiContext } = job.data;
+    let { senderId, roomId, message, isAiContext } = job.data;
 
+    if (message === '' && isAiContext) message = "No content generated"
     await chatModel.create({
       roomId,
       senderId,

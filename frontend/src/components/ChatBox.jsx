@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-
-import { Send, Flame, ChevronLeft, Loader } from 'lucide-react';
+import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateAiResponse, getMessages } from '../service/message';
@@ -75,20 +74,21 @@ export default function ChatBox() {
       }
     }
 
-    const fetchNewMsg = async() => {
-      setLoading(true);
-      await fetchMessages();
-      setLoading(false);
-    }
-
     socket.emit("joinRoom", room._id);
 
     socket.on("receiveMessage", (msg) => {
       if (!userMap[msg.senderId]){
         fetchUserById(msg);
       }
-      fetchNewMsg();
+      setMessages(prevMessages => [...prevMessages, msg]);
     });
+
+    socket.on("aiLoadingTrue", () => {
+      setAiLoading(true);
+    })
+    socket.on("aiLoadingFalse", () => {
+      setAiLoading(false);
+    })
 
     return () => {
       socket.off("receiveMessage");
@@ -122,6 +122,7 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
+      socket.emit("aiLoadingTrue", room._id);
       setAiLoading(true);
       const resp = await generateAiResponse(input, aiType, room._id);
       const ai_user = aiUsers.find(u => u.name === aiType);
@@ -134,11 +135,13 @@ export default function ChatBox() {
           isAiContext: sendToAI 
         }
         socket.emit("sendMessage", newMessage);
-        setAiLoading(false);
       } 
       else {
         toast.error(resp.message);
       }
+
+      setAiLoading(false);
+      socket.emit("aiLoadingFalse", room._id)
     }
 
   };
@@ -207,8 +210,8 @@ export default function ChatBox() {
       </Header>
 
       <ChatArea className="chat-area"> {/* Added class for scrollbar */}
-        {messages.map((msg) => (
-          <Message key={msg._id} $isAI={aiIdSet.has(msg.senderId)}>
+        {messages.map((msg, index) => (
+          <Message key={index} $isAI={aiIdSet.has(msg.senderId)}>
             <MessageContent $isAI={aiIdSet.has(msg.senderId)}>
               <MessageHeader>
                 {aiIdSet.has(msg.senderId) ? (
@@ -220,7 +223,7 @@ export default function ChatBox() {
                   <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
                 )}
               </MessageHeader>
-              <MessageText>{msg.message}</MessageText>
+              <MessageText>{msg.message === ''? "No content generated" : msg.message}</MessageText>
             </MessageContent>
           </Message>
         ))}
@@ -505,7 +508,7 @@ const AiThinking = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #f5f5f5;
+  color: #6b6b6b;
   font-weight: 500;
   padding: 10px 20px;
   margin-bottom: 10px;
@@ -513,7 +516,7 @@ const AiThinking = styled.div`
   .dot {
     width: 8px;
     height: 8px;
-    background: #f5f5f5;
+    background: #6b6b6b;
     border-radius: 50%;
     animation: bounce 1.4s infinite ease-in-out both;
   }
