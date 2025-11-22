@@ -14,8 +14,8 @@ export async function generateAiResponse(prompt, type) {
   }
   else if (type === 'Deepseek' || type === 'Qwen'){
     const modelMap = {
-      Deepseek: "deepseek/deepseek-chat-v3.1:free",
-      Qwen: "qwen/qwen-2.5-72b-instruct:free",
+      Deepseek: "deepseek/deepseek-r1:free",
+      Qwen: "qwen/qwen3-30b-a3b:free",
     };
 
     const apiKeyMap = {

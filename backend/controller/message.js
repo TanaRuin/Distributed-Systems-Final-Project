@@ -1,4 +1,5 @@
 import { generateAiResponse } from "../config/chatbot.js";
+import { getLeaderResponse } from "../config/leaderOrchestrator.js";
 import chatModel from "../models/message.js";
 
 export const getMessages = async(req, res) => {
@@ -58,7 +59,19 @@ export const generateBotRes = async(req,res) =>{
     
 
     if (type === 'All'){
-        return res.status(200).json({success: true, response: "Still on development", message: "Still on development"})
+        try {
+            const chosen = await getLeaderResponse(finalPrompt);
+            console.log("chosen", chosen)
+
+            return res.status(200).json({
+                success: true,
+                response: chosen.response,
+                message: "Leader-selected AI response."
+            });
+        } catch (err) {
+            console.error("Leader error:", err);
+            return res.status(500).json({ success: false, error: "Leader election failed." });
+        }
     }
 
     try {
