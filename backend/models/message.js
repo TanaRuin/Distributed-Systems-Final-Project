@@ -5,6 +5,7 @@ const chatSchema = new mongoose.Schema(
     roomId: { type: mongoose.Schema.Types.ObjectId, ref: "room", required: true },
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
     message: { type: String, required: true },
+    isAiContext: { type: Boolean, required: true },
   }, 
   { timestamps: true }
 );

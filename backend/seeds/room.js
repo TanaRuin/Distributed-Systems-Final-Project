@@ -24,7 +24,7 @@ const seedRooms = async () => {
       {
         name: "AI Support",
         code: "AI123",
-        participants: [users[1]._id, users[2]._id] 
+        participants: [users[1]._id, users[2]._id, , users[5]._id, , users[6]._id, , users[7]._id] 
       }
     ];
 
