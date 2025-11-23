@@ -5,7 +5,7 @@ const redis = new Redis();
 
 // key for leader election
 const LEADER_KEY = "ai_leader";
-const TTL = 4000000;
+const TTL = 4000;
 
 // AI candidates
 const AI_MODELS = ['Gemini', 'Qwen', 'Deepseek'];
