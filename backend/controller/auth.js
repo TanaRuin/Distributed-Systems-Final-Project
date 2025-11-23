@@ -46,7 +46,10 @@ export const login = async (req, res) => {
     if(!existing){ 
       return res.status(400).json({success:false, message:'Invalid credentials'})
     }
-
+    if(existing.role === "AI"){ 
+      return res.status(400).json({success:false, message:'This is an AI user'})
+    }
+    
     const isMatch = await bcrypt.compare(password, existing.password);
     if(!isMatch){
         return res.status(400).json({success:false, message:"Invalid credentials"})

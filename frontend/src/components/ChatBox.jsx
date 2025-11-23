@@ -1,14 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-
 import { Send, Flame, ChevronLeft } from 'lucide-react';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { generateAiResponse, getMessages } from '../service/message';
 import { toast } from 'react-toastify';
-import { getUserById, getUserData } from '../service/auth';
 import { socket } from '../service/socket.js';
 import { getAllUserAi, getUserById, getUserData } from '../service/auth';
-import io from "socket.io-client";
 
 
 const ChatGlobals = createGlobalStyle`
@@ -51,6 +48,7 @@ export default function ChatBox() {
   const [aiUsers, setAiUsers] = useState([])
   const [aiType, setAiType] = useState('Gemini');
   const [aiIdSet, setAiIdSet] = useState(new Set());
+  const [aiLoading, setAiLoading] = useState(false);
 
   const messagesEnd = useRef(null);
 
@@ -76,20 +74,21 @@ export default function ChatBox() {
       }
     }
 
-    const fetchNewMsg = async() => {
-      setLoading(true);
-      await fetchMessages();
-      setLoading(false);
-    }
-
     socket.emit("joinRoom", room._id);
 
     socket.on("receiveMessage", (msg) => {
       if (!userMap[msg.senderId]){
         fetchUserById(msg);
       }
-      fetchNewMsg();
+      setMessages(prevMessages => [...prevMessages, msg]);
     });
+
+    socket.on("aiLoadingTrue", () => {
+      setAiLoading(true);
+    })
+    socket.on("aiLoadingFalse", () => {
+      setAiLoading(false);
+    })
 
     return () => {
       socket.off("receiveMessage");
@@ -123,6 +122,8 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
+      socket.emit("aiLoadingTrue", room._id);
+      setAiLoading(true);
       const resp = await generateAiResponse(input, aiType, room._id);
       const ai_user = aiUsers.find(u => u.name === aiType);
 
@@ -138,6 +139,9 @@ export default function ChatBox() {
       else {
         toast.error(resp.message);
       }
+
+      setAiLoading(false);
+      socket.emit("aiLoadingFalse", room._id)
     }
 
   };
@@ -206,8 +210,8 @@ export default function ChatBox() {
       </Header>
 
       <ChatArea className="chat-area"> {/* Added class for scrollbar */}
-        {messages.map((msg) => (
-          <Message key={msg._id} $isAI={aiIdSet.has(msg.senderId)}>
+        {messages.map((msg, index) => (
+          <Message key={index} $isAI={aiIdSet.has(msg.senderId)}>
             <MessageContent $isAI={aiIdSet.has(msg.senderId)}>
               <MessageHeader>
                 {aiIdSet.has(msg.senderId) ? (
@@ -219,12 +223,22 @@ export default function ChatBox() {
                   <MessageAuthor>{userMap[msg.senderId]?.name || "Unknown User"}</MessageAuthor>
                 )}
               </MessageHeader>
-              <MessageText>{msg.message}</MessageText>
+              <MessageText>{msg.message === ''? "No content generated" : msg.message}</MessageText>
             </MessageContent>
           </Message>
         ))}
         <div ref={messagesEnd} />
       </ChatArea>
+
+      {aiLoading && (
+        <AiThinking>
+          <span className="dot"></span>
+          <span className="dot"></span>
+          <span className="dot"></span>
+          The guide is thinking...
+        </AiThinking>
+      )}
+
 
       <InputArea>
         <InputControls>
@@ -487,5 +501,39 @@ const SelectAI = styled.select`
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+`;
+
+const AiThinking = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b6b6b;
+  font-weight: 500;
+  padding: 10px 20px;
+  margin-bottom: 10px;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: #6b6b6b;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+
+  .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    } 
+    40% {
+      transform: scale(1);
+    }
   }
 `;

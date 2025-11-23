@@ -58,6 +58,14 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("aiLoadingTrue", (roomId) => {
+        socket.to(roomId).emit("aiLoadingTrue");
+    });
+
+    socket.on("aiLoadingFalse", (roomId) => {
+        socket.to(roomId).emit("aiLoadingFalse");
+    });
+
     socket.on("disconnect", () => {
         console.log(`❌ Socket disconnected: ${socket.id}`);
     });
