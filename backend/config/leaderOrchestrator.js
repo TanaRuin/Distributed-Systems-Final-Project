@@ -1,7 +1,6 @@
 import Redis from "ioredis";
 import { generateAiResponse } from "./chatbot.js";
-
-const redis = new Redis();
+import { redis } from "../queues/messageQueue.js";
 
 // key for leader election
 const LEADER_KEY = "ai_leader";

@@ -1,12 +1,22 @@
 import { generateAiResponse } from "../config/chatbot.js";
 import { getLeaderResponse } from "../config/leaderOrchestrator.js";
 import chatModel from "../models/message.js";
+import { redis } from "../queues/messageQueue.js";
 
 export const getMessages = async(req, res) => {
     try {
         const roomId = req.query.roomId;
+        const cachedMsg = await redis.get(`chat-${roomId}`);
+        if (cachedMsg) {
+            return res.status(200).json({
+                success: true,
+                chats: JSON.parse(cachedMsg),
+            });
+        }
+
         const chats = await chatModel.find({roomId});
         
+        await redis.set(`chat-${roomId}`, JSON.stringify(chats), "EX", 10);
         return res.status(200).json({success:true, chats})
 
     } catch (error) {
@@ -24,6 +34,7 @@ export const sendMessage = async(req, res) => {
             message: content,
             isAiContext
         })
+        await redis.del(`chat-${roomId}`);
         return res.status(200).json({success:true})
 
     } catch (error) {
