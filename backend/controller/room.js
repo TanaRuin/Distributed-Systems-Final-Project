@@ -1,5 +1,6 @@
 import roomModel from "../models/room.js";
 import userModel from "../models/user.js";
+import { redis } from "../queues/messageQueue.js";
 
 function generateRandomString(length) {
   return Math.random().toString(36).substring(2, 2 + length);
@@ -21,6 +22,8 @@ export const createRoom = async(req, res) => {
             code: roomCode,
             participants: participantList,
         });
+
+        await redis.del(`room-${userId}`);
         return res.status(200).json({ success: true, room });
 
     } catch (error) {
@@ -43,6 +46,7 @@ export const joinRoom = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid room code' });
         }
 
+        await redis.del(`room-${userId}`);
         return res.status(200).json({ success: true, room: updatedRoom });
 
     } catch (error) {
@@ -55,7 +59,17 @@ export const joinRoom = async (req, res) => {
 export const getRooms = async(req, res) => {
     try {
         const userId = req.query.userId;
+        const cachedRooms = await redis.get(`room-${userId}`);
+        if(cachedRooms){
+            return res.status(200).json({
+                success: true,
+                rooms: JSON.parse(cachedRooms),
+            });
+        }
+
         const rooms = await roomModel.find({ participants: { $in: [userId] } });
+        await redis.set(`room-${userId}`, JSON.stringify(rooms), "EX", 10);
+
         return res.status(200).json({ success: true, rooms });
     } catch (error) {
         console.error("getRooms failed", error);
