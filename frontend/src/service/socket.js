@@ -11,6 +11,8 @@ const socket = io(url, {
 socket.on("disconnect", (reason) => {
   console.warn("Socket disconnect: ", reason);
   alert("Socket disconnected, please refresh the page.");
+  const timestamp = Date.now();
+  console.log("server_restored: ",timestamp);
 });
 
 export {socket};

@@ -48,8 +48,10 @@ io.on("connection", (socket) => {
 
     socket.on("sendMessage", async (msg) => {
         try {
+            const timestamp = Date.now();
+            console.log("message_queued: ",timestamp);
+
             await messageQueue.add("new-message", msg);
-            console.log("📥 Queued message:", msg.message);
 
             console.log("roomid", msg.roomId)
             io.to(msg.roomId).emit("receiveMessage", msg);
@@ -67,6 +69,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
+      const timestamp = Date.now();
+      console.log("server_crash: ",timestamp);
+
         console.log(`❌ Socket disconnected: ${socket.id}`);
     });
 });

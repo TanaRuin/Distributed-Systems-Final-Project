@@ -72,7 +72,7 @@ export const generateBotRes = async(req,res) =>{
     if (type === 'All'){
         try {
             const chosen = await getLeaderResponse(finalPrompt);
-            console.log("chosen", chosen)
+            // console.log("chosen", chosen)
 
             return res.status(200).json({
                 success: true,

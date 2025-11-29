@@ -77,6 +77,9 @@ export default function ChatBox() {
     socket.emit("joinRoom", room._id);
 
     socket.on("receiveMessage", (msg) => {
+      const timestamp = Date.now();
+      console.log("received by client: ",timestamp);
+
       if (!userMap[msg.senderId]){
         fetchUserById(msg);
       }
@@ -106,9 +109,18 @@ export default function ChatBox() {
     fetchAiUsers();
   }, []);
 
+  const storm = async() => {
+    for (let i=0; i<100; i++){
+      handleSend();
+    }
+  }
+
 
   const handleSend = async() => {
     if (input.trim() === '') return;
+
+    const timestamp = Date.now();
+    console.log("sent from client: ", timestamp);
 
     const user = getUserData();
     const newMessage = {
@@ -122,6 +134,9 @@ export default function ChatBox() {
 
 
     if (sendToAI) {
+      const timestamp = Date.now();
+      console.log("sent to ai: ", timestamp);
+
       socket.emit("aiLoadingTrue", room._id);
       setAiLoading(true);
       const resp = await generateAiResponse(input, aiType, room._id);
@@ -135,6 +150,9 @@ export default function ChatBox() {
           isAiContext: sendToAI 
         }
         socket.emit("sendMessage", newMessage);
+
+        const timestamp = Date.now();
+        console.log("sent from ai: ", timestamp);
       } 
       else {
         toast.error(resp.message);

@@ -28,7 +28,8 @@ export const messageWorker = new Worker(
       isAiContext
     });
 
-    console.log("💾 Stored message:", message);
+    const timestamp = Date.now();
+    console.log("message_dequeued: ", timestamp);
   },
   { connection: redis }
 );

@@ -31,6 +31,9 @@ async function trySetLeader(leaderName) {
 }
 
 export async function getLeaderResponse(prompt) {
+    const timestamp = Date.now();
+    console.log("leader_elect_start: ",timestamp);
+
     const cachedLeader = await redis.get(LEADER_KEY);
 
     if (cachedLeader) {
@@ -74,6 +77,9 @@ export async function getLeaderResponse(prompt) {
 
     // Step 3 — persist leader into Redis
     await trySetLeader(leader.model);
+
+    const timestamp2 = Date.now();
+    console.log("leader_elect_end: ",timestamp2);
 
     return leader;
 }

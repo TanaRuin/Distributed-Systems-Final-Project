@@ -40,7 +40,6 @@ export async function generateAiResponse(prompt, type) {
     });
 
     const data = await response.json();
-    console.log(data)
     let text = data?.choices?.[0]?.message?.content || ""
     
     return text
