@@ -46,7 +46,7 @@ export default function ChatBox() {
   const [loading, setLoading] = useState(false);
   const [userMap, setUserMap] = useState({});
   const [aiUsers, setAiUsers] = useState([])
-  const [aiType, setAiType] = useState('Gemini');
+  const [aiType, setAiType] = useState('llama3');
   const [aiIdSet, setAiIdSet] = useState(new Set());
   const [aiLoading, setAiLoading] = useState(false);
 

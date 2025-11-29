@@ -36,14 +36,20 @@ const seedUsers = async () => {
         role: "AI"
       },
       {
-        name: "Qwen",
-        email: "qwen@openrouter.com",
+        name: "llama3",
+        email: "llama3@llama.com",
         password: pass,
         role: "AI"
       },
       {
-        name: "Deepseek",
-        email: "deepseek@openrouter.com",
+        name: "qwen2",
+        email: "qwen2@llama.com",
+        password: pass,
+        role: "AI"
+      },
+      {
+        name: "mistral",
+        email: "mistral@llama.com",
         password: pass,
         role: "AI"
       },
