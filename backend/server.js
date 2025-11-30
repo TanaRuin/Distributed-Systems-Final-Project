@@ -52,8 +52,6 @@ io.on("connection", (socket) => {
             console.log("message_queued: ",timestamp);
 
             await messageQueue.add("new-message", msg);
-
-            console.log("roomid", msg.roomId)
             io.to(msg.roomId).emit("receiveMessage", msg);
         } catch (e) {
             console.error("❌ Queue error:", e.message);

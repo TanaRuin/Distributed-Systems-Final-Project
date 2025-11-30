@@ -92,7 +92,10 @@ export const getUser = async (req, res) => {
 
 export const getAllAiUser = async(req, res) => {
   try {
-    const allData = await userModel.find({role: "AI"});
+    const allData = await userModel.find({
+      role: "AI",
+      name: { $ne: "Gemini" }
+    });
     return res.status(200).json({ success: true, users: allData });
 
   } catch (error) {

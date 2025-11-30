@@ -1,4 +1,3 @@
-import Redis from "ioredis";
 import { generateAiResponse } from "./chatbot.js";
 import { redis } from "../queues/messageQueue.js";
 
@@ -7,14 +6,27 @@ const LEADER_KEY = "ai_leader";
 const TTL = 4000;
 
 // AI candidates
-const AI_MODELS = ['Gemini', 'Qwen', 'Deepseek'];
+const AI_MODELS = ['llama3', 'qwen2', 'mistral'];
 
-function scoreResponse(text) {
-    // simple scoring: longer & richer response is better
-    return text.length;
+async function scoreResponse(text, question) {
+    const prompt = `Given this response: "${text}"
+            And this question: "${question}"
+
+            Rate how well the response answers the question.
+            Return ONLY a number between 0 and 1. No words, no explanation.
+            `;
+    
+    const response = await generateAiResponse(prompt, "Gemini");
+    
+    const raw = response.trim();
+    const float = parseFloat(raw);
+
+    return isNaN(float) ? 0 : float;
 }
 
 async function electLeader(aiResults) {
+    console.log("ai results", aiResults)
+
     let leader = null;
 
     for (const result of aiResults) {
@@ -27,7 +39,7 @@ async function electLeader(aiResults) {
 }
 
 async function trySetLeader(leaderName) {
-    return redis.set(LEADER_KEY, leaderName, "PX", TTL);
+    return redis.set(LEADER_KEY, leaderName, "PX", TTL, "NX");
 }
 
 export async function getLeaderResponse(prompt) {
@@ -43,7 +55,7 @@ export async function getLeaderResponse(prompt) {
             return {
                 model: cachedLeader,
                 response,
-                score: scoreResponse(response)
+                score: await scoreResponse(response, prompt)
             };
         } catch (err) {
             console.error(`Cached leader ${cachedLeader} failed. Re-electing leader...`);
@@ -51,26 +63,28 @@ export async function getLeaderResponse(prompt) {
         }
     }
 
-    // Step 1 — query all AIs in parallel
-    const promises = AI_MODELS.map(async (model) => {
+    const results = [];
+
+    for (const model of AI_MODELS) {
         try {
             const response = await generateAiResponse(prompt, model);
+            console.log("model", model, "response", response);
 
-            return {
+            results.push({
                 model,
                 response,
-                score: scoreResponse(response)
-            };
-        } catch {
-            return {
+                score: await scoreResponse(response, prompt)
+            });
+
+        } catch (err) {
+            console.error(err);
+            results.push({
                 model,
                 response: "",
                 score: 0
-            };
+            });
         }
-    });
-
-    const results = await Promise.all(promises);
+    }
 
     // Step 2 — elect the leader
     const leader = await electLeader(results);
