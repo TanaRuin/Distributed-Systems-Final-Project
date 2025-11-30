@@ -27,8 +27,6 @@ export const messageWorker = new Worker(
       message,
       isAiContext
     });
-
-    console.log("💾 Stored message:", message);
   },
   { connection: redis }
 );

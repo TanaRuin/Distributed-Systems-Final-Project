@@ -45,7 +45,7 @@ export const sendMessage = async(req, res) => {
 
 export const generateBotRes = async(req,res) =>{
     const {prompt, type, roomId} = req.body;
-    const aiTypes = ['Gemini','Qwen','Deepseek','All']
+    const aiTypes = ['llama3','qwen2', 'mistral','All']
 
     if (!aiTypes.includes(type)){
         console.error('Error:', "Invalid AI Type");
