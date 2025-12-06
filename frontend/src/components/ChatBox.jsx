@@ -165,7 +165,6 @@ export default function ChatBox() {
   };
 
   const fetchMessages = async() => {
-    console.log("fetching message")
     const resp = await getMessages(room._id);
         
     if (resp.success) {
@@ -288,9 +287,9 @@ export default function ChatBox() {
             placeholder="Share your discoveries..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            onKeyPress={(e) => e.key === 'Enter' && storm()}
           />
-          <SendButton onClick={handleSend}>
+          <SendButton onClick={storm}>
             <Send size={16} />
             Send
           </SendButton>

@@ -70,6 +70,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
+      const timestamp = Date.now();
+      console.log("server_crash: ",timestamp);
         console.log(`❌ Socket disconnected: ${socket.id}`);
     });
 });
