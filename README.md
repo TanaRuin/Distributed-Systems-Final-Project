@@ -57,4 +57,4 @@ The complete benchmark result can be accessed in [here](https://docs.google.com/
 <br>
 
 ## Demo Video
-To access the demo video, please refer to this [link]()
+To access the demo video, please refer to this [link](https://drive.google.com/file/d/1ERGjd1Nl0OJ42dDV3DYO_AbTZ8TWCo8k/view?usp=sharing)
