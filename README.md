@@ -38,6 +38,13 @@ This project is a chat system that incorporates many AI models in a group chat. 
     npm install
     ```
 
+- Seed the database tables inside the backend folder.
+  ```text
+  cd backend
+  node seeds/user.js
+  node seeds/room.js
+  ```
+
 - Running frontend.
     ```text
     npm run dev

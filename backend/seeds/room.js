@@ -11,20 +11,12 @@ const seedRooms = async () => {
     connectDB();
 
     const users = await userModel.find({});
-    
-    // await roomModel.deleteMany({});
-    // console.log("🧹 Old rooms deleted");
 
     const rooms = [
       {
-        name: "General Chat",
-        code: "CHAT123",
-        participants: [users[0]._id, users[1]._id]
-      },
-      {
         name: "AI Support",
         code: "AI123",
-        participants: [users[1]._id, users[2]._id, , users[5]._id, , users[6]._id, , users[7]._id] 
+        participants: [users[1]._id, users[2]._id, users[3]._id, users[4]._id, users[5]._id, users[6]._id] 
       }
     ];
 
