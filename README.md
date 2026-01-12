@@ -33,8 +33,19 @@ This project is a chat system that incorporates many AI models in a group chat. 
     docker-compose up -d
     ```
 
+- Pull the LLMs to the Docker container.
+  ```text
+  docker exec -it ollama ollama pull llama3
+  docker exec -it ollama ollama pull mistral
+  docker exec -it ollama ollama pull qwen2
+  ```
+
 - Installing all dependencies. Run the below command in both frontend and backend folder.
     ```text
+    cd backend
+    npm install
+
+    cd frontend
     npm install
     ```
 
